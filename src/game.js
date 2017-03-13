@@ -1,6 +1,6 @@
 import 'babel-polyfill';
 
-const game = new Phaser.Game(960, 540, Phaser.AUTO, '', {preload: preload, create: create, update: update});
+const game = new Phaser.Game(480, 270, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 
 var player, cursors, platforms;
 
@@ -8,13 +8,19 @@ function preload() {
 	game.load.image('background', 'assets/background.png');
 	game.load.image('tile', 'assets/tile.png');
 	game.load.spritesheet('leek', 'assets/leek.png', 64, 64);
+
+	game.scale.pageAlignHorizontally = true; 
+	game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+	game.scale.setUserScale(2);
+	game.stage.smoothed = false;
+	Phaser.Canvas.setImageRenderingCrisp(game.canvas); 
+
 }
 
 function create() {
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 
 	var bg = game.add.image(0, 0, 'background');
-	bg.scale.setTo(2, 2);
 
 	platforms = game.add.group();
 	platforms.enableBody = true;
