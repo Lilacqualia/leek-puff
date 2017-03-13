@@ -53,8 +53,8 @@ exports.files = {
 // The Browserify settings.
 exports.bundle = {
   debug: true,
-  standalone: 'app',
-  entries: [`${SRC}/app.js`]
+  standalone: 'game',
+  entries: [`${SRC}/game.js`]
 };
 
 // The BrowserSync settings.
