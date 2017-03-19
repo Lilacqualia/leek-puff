@@ -37,7 +37,7 @@ export default class Leek extends Phaser.Sprite {
 			case 'inflate':
 				this.inflate = true;
 				this.animations.play('inflated');
-				this.body.acceleration.y = -500;
+				this.body.acceleration.y = -900;
 				break;
 			case 'deflate':
 				this.inflate = false;
