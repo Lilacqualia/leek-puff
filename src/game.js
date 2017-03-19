@@ -1,10 +1,12 @@
 import 'babel-polyfill';
 
 import Leek from './Leek';
+import Constants from './Constants';
+import Input from './Input';
 
 const game = new Phaser.Game(480, 270, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 
-var player, cursors, platforms;
+var player, platforms;
 
 function preload() {
 	game.load.image('background', 'assets/background.png');
@@ -22,54 +24,23 @@ function preload() {
 function create() {
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 
-
 	game.add.image(0, 0, 'background');
 
 	platforms = game.add.group();
 	platforms.enableBody = true;
 
 	var ground;
-
 	for (var i = 0; i < game.world.width; i = i + 8) {
 		ground = platforms.create(i, game.world.height - 8, 'tile');
 		ground.body.immovable = true;
 	}
 
-	player = game.add.existing(new Leek(game, 0, 0));
+	var inputControl = new Input(game);
+	player = game.add.existing(new Leek(game, 0, 0, inputControl));
 
-
-
-	cursors = game.input.keyboard.createCursorKeys();
 
 }
 
 function update() {
 	game.physics.arcade.collide(player, platforms);
-	var horizontalV = 150 - (player.inflate * 75);
-
-	player.body.velocity.x = 0;
-	if (cursors.left.isDown) {
-		player.body.velocity.x -= horizontalV;
-		player.scale.setTo(-1, 1);
-	}
-	if (cursors.right.isDown) {
-		player.body.velocity.x += horizontalV;
-		player.scale.setTo(1, 1);
-	}
-	if (cursors.up.isDown) {
-		player.inflate = true;
-	}
-	if (cursors.down.isDown) {
-		player.inflate = false;
-	}
-
-	if (player.inflate) {
-		player.body.gravity.y = 200;
-		player.body.velocity.y -= 5;
-		if (player.body.velocity.y > 80) {player.body.velocity.y = 80;}
-		player.animations.play('inflated');
-	} else {
-		player.body.gravity.y = 600;
-		player.animations.play('normal');
-	}
 }
