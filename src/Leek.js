@@ -4,10 +4,11 @@ export default class Leek extends Phaser.Sprite {
 		context.physics.arcade.enable(this);
 		this.body.gravity.y = 600;
 		this.body.collideWorldBounds = true;
-		this.body.setSize(8, 16, 28, 40);
+
 		this.anchor.x = .5;
 		this.anchor.y = .625;
-		this.inflate = false;
+
+		this._deflate();
 		this.animations.add('normal', [0], true);
 		this.animations.add('inflated', [1], true);
 
@@ -26,25 +27,36 @@ export default class Leek extends Phaser.Sprite {
 				break;
 		}
 
-		var velocity = 150;
+		var deltaX = 1500;
 		switch(event.command) {
 			case 'startMove':
 				this.scale.setTo(direction, 1);
 				break;
 			case 'stopMove':
-				velocity = -velocity;
+				deltaX = -deltaX;
 				break;
 			case 'inflate':
-				this.inflate = true;
-				this.animations.play('inflated');
-				this.body.acceleration.y = -900;
+				this._inflate();
 				break;
 			case 'deflate':
-				this.inflate = false;
-				this.animations.play('normal');
-				this.body.acceleration.y = 0;
+				this._deflate();
 				break;
 		}
-		this.body.velocity.x += velocity * direction;
+		this.body.acceleration.x += deltaX * direction;
+	}
+
+	_inflate() {
+		this.animations.play('inflated');
+		this.body.acceleration.y = -900;
+		this.body.drag = {x: 3000, y: 1500};
+		this.body.maxVelocity = {x: 75, y: 250};
+	}
+
+	_deflate() {
+		this.animations.play('normal');
+		this.body.acceleration.y = 0;
+		this.body.drag = {x: 1500, y: 200};
+		this.body.maxVelocity = {x: 150, y: 500};
+		this.body.setSize(8, 16, 28, 40);
 	}
 }
