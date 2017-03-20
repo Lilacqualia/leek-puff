@@ -19,13 +19,18 @@ export default class Leek extends Phaser.Sprite {
 			right: false
 		};
 
-		// Initalize as normal
+		// Initalize in normal state
 		this._deflate();
 
-		// Maximum & current inflation time in ms
-		this.maxInflationTime = this.inflationTime = 3000;
-		// Inflation time regeneration in ms/second
-		this.inflationTimeRegen = 750;
+		// Inflation state
+		this.inflated = false;
+
+		// Maximum inflation time in ms
+		this.maxInflationTime = 1000;
+		// Inflation time cooldown in ms
+		this.inflationCooldown = 500;
+		// Is inflation is on cooldown?
+		this.inflationOnCooldown = false;
 
 		// Add animations
 		this.animations.add('normal', [0], true);
@@ -60,10 +65,14 @@ export default class Leek extends Phaser.Sprite {
 				}
 				break;
 			case 'inflate':
-				this._inflate();
+				if (!this.inflated && !this.inflationOnCooldown) {
+					this._inflate();
+				}
 				break;
 			case 'deflate':
-				this._deflate();
+				if (this.inflated) {
+					this._deflate();
+				}
 				break;
 		}
 
@@ -78,6 +87,8 @@ export default class Leek extends Phaser.Sprite {
 	}
 
 	_inflate() {
+		this.inflated = true;
+
 		this.animations.play('inflated');
 		this.body.acceleration.y = -700;
 		this.body.drag = {x: 50, y: 10};
@@ -85,9 +96,31 @@ export default class Leek extends Phaser.Sprite {
 		this.accelX = 500;
 
 		this._updateAcceleration();
+
+		var timer = this.game.time.create(true);
+		timer.add(this.maxInflationTime, this._inflateExpire, this);
+		timer.start();
+
+	}
+
+	_inflateExpire() {
+		if (this.inflated) {
+			this._deflate();
+		}
+	}
+
+	_inflateRecharge() {
+		this.inflationOnCooldown = false;
 	}
 
 	_deflate() {
+		this.inflated = false;
+		this.inflationOnCooldown = true;
+
+		var timer = this.game.time.create(true);
+		timer.add(this.inflationCooldown, this._inflateRecharge, this);
+		timer.start();
+
 		this.animations.play('normal');
 		this.body.acceleration.y = 0;
 		this.body.drag = {x: 1500, y: 200};
