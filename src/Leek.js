@@ -1,9 +1,9 @@
 import Constants from './Constants';
 
 export default class Leek extends Phaser.Sprite {
-	constructor(context, x, y, input) {
-		super(context, x, y, 'leek');
-		context.physics.arcade.enable(this);
+	constructor(game, x, y, input) {
+		super(game, x, y, 'leek');
+		this.game.physics.arcade.enable(this);
 
 		this.body.gravity.y = 600;
 		this.body.collideWorldBounds = true;
@@ -13,11 +13,24 @@ export default class Leek extends Phaser.Sprite {
 
 		this.accelX = 1500;
 
-		// Am I currently commanded to move in a direction?
-		this.moving = {
+		// Currently active commands
+		this.commands = {
 			left: false,
-			right: false
+			right: false,
+			inflate: false
 		};
+
+		// Maximum inflation time in ms
+		this.maxInflationTime = 1500;
+		// Inflation time cooldown in ms
+		this.inflationCooldown = 500;
+		// Is inflation is on cooldown?
+		this.inflationOnCooldown = false;
+		
+		this.timer = this.game.time.create(false);
+		this.timer.start();
+
+		this.inflateExpireTimer = {};
 
 		// Initalize in normal state
 		this._deflate();
@@ -25,19 +38,20 @@ export default class Leek extends Phaser.Sprite {
 		// Inflation state
 		this.inflated = false;
 
-		// Maximum inflation time in ms
-		this.maxInflationTime = 1000;
-		// Inflation time cooldown in ms
-		this.inflationCooldown = 500;
-		// Is inflation is on cooldown?
-		this.inflationOnCooldown = false;
-
 		// Add animations
 		this.animations.add('normal', [0], true);
 		this.animations.add('inflated', [1], true);
 
 		// Register input listener
 		input.dispatcher.add(this._command.bind(this));
+	}
+
+	_updateState() {
+		if (this.inflated) {
+			this.animations.play('inflated');
+		} else {
+			this.animations.play('normal');
+		}
 	}
 
 	_command(event) {
@@ -49,27 +63,29 @@ export default class Leek extends Phaser.Sprite {
 
 		switch(event.command) {
 			case 'startMove':
-				this.moving[event.direction] = true;
+				this.commands[event.direction] = true;
 				// Don't change facing if holding both horizontal keys
-				if (!(this.movingLeft && this.movingRight)) {
+				if (!(this.commands.left && this.commands.right)) {
 					this.scale.setTo(direction, 1);
 				}
 				break;
 			case 'stopMove':
-				this.moving[event.direction] = false;
+				this.commands[event.direction] = false;
 				// Change facing if still holding the other horizontal key
-				if (this.moving.right) {
+				if (this.commands.right) {
 					this.scale.setTo(1, 1);
-				} else if (this.moving.left) {
+				} else if (this.commands.left) {
 					this.scale.setTo(-1, 1);
 				}
 				break;
-			case 'inflate':
+			case 'startInflate':
+				this.commands.inflate = true;
 				if (!this.inflated && !this.inflationOnCooldown) {
 					this._inflate();
 				}
 				break;
-			case 'deflate':
+			case 'stopInflate':
+				this.commands.inflate = false;
 				if (this.inflated) {
 					this._deflate();
 				}
@@ -82,14 +98,14 @@ export default class Leek extends Phaser.Sprite {
 	// Recalculate acceleration based on current input and state
 	_updateAcceleration() {
 		this.body.acceleration.x = 
-			(this.moving.left * -this.accelX) +
-			(this.moving.right * this.accelX);
+			(this.commands.left * -this.accelX) +
+			(this.commands.right * this.accelX);
 	}
 
 	_inflate() {
 		this.inflated = true;
+		this._updateState();
 
-		this.animations.play('inflated');
 		this.body.acceleration.y = -700;
 		this.body.drag = {x: 50, y: 10};
 		this.body.maxVelocity = {x: 75, y: 100};
@@ -97,9 +113,9 @@ export default class Leek extends Phaser.Sprite {
 
 		this._updateAcceleration();
 
-		var timer = this.game.time.create(true);
-		timer.add(this.maxInflationTime, this._inflateExpire, this);
-		timer.start();
+		this.inflateExpireTimer = this.timer.add(
+			this.maxInflationTime, this._inflateExpire, this
+		);
 
 	}
 
@@ -111,17 +127,21 @@ export default class Leek extends Phaser.Sprite {
 
 	_inflateRecharge() {
 		this.inflationOnCooldown = false;
+		// Inflate immediately after recharge if key is held down
+		if (this.commands.inflate) {
+			this._inflate();
+		}
 	}
 
 	_deflate() {
 		this.inflated = false;
+		this._updateState();
+
 		this.inflationOnCooldown = true;
 
-		var timer = this.game.time.create(true);
-		timer.add(this.inflationCooldown, this._inflateRecharge, this);
-		timer.start();
+		this.timer.remove(this.inflateExpireTimer);
+		this.timer.add(this.inflationCooldown, this._inflateRecharge, this);
 
-		this.animations.play('normal');
 		this.body.acceleration.y = 0;
 		this.body.drag = {x: 1500, y: 200};
 		this.body.maxVelocity = {x: 150, y: 500};

@@ -2,30 +2,31 @@ import Constants from './Constants';
 
 export default class Input {
 	constructor(context) {
-		this.keys = context.input.keyboard.createCursorKeys();
+		var keyboard = context.input.keyboard;
 		this.dispatcher = new Phaser.Signal();
 
-		this.keys.right.onDown.add(
-			this._dispatch.bind(this, {command: 'startMove', direction: 'right'})
+		this._addKey(keyboard, Phaser.KeyCode.RIGHT,
+			{command: 'startMove', direction: 'right'},
+			{command: 'stopMove', direction: 'right'}
 		);
-		this.keys.right.onUp.add(
-			this._dispatch.bind(this, {command: 'stopMove', direction: 'right'})
+		this._addKey(keyboard, Phaser.KeyCode.LEFT,
+			{command: 'startMove', direction: 'left'},
+			{command: 'stopMove', direction: 'left'}
 		);
-		this.keys.left.onDown.add(
-			this._dispatch.bind(this, {command: 'startMove', direction: 'left'})
-		);
-		this.keys.left.onUp.add(
-			this._dispatch.bind(this, {command: 'stopMove', direction: 'left'})
-		);
-		this.keys.up.onDown.add(
-			this._dispatch.bind(this, {command: 'inflate'})
-		);
-		this.keys.down.onDown.add(
-			this._dispatch.bind(this, {command: 'deflate'})
+
+		this._addKey(keyboard, Phaser.KeyCode.SPACEBAR,
+			{command: 'startInflate'},
+			{command: 'stopInflate'}
 		);
 	}
 
 	_dispatch(event) {
 		this.dispatcher.dispatch(event);
+	}
+
+	_addKey(keyboard, keyCode, downEvent, upEvent) {
+		var key = keyboard.addKey(keyCode);
+		key.onDown.add(this._dispatch.bind(this, downEvent));
+		key.onUp.add(this._dispatch.bind(this, upEvent));
 	}
 }

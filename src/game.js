@@ -29,9 +29,17 @@ function create() {
 	platforms = game.add.group();
 	platforms.enableBody = true;
 
-	var ground;
-	for (var i = 0; i < game.world.width; i = i + 8) {
+	var ground, i;
+	for (i = 0; i < game.world.width; i = i + 8) {
 		ground = platforms.create(i, game.world.height - 8, 'tile');
+		ground.body.immovable = true;
+	}
+	for (i = 0; i < game.world.width/3; i = i + 8) {
+		ground = platforms.create(i, game.world.height - 64, 'tile');
+		ground.body.immovable = true;
+	}
+	for (i = game.world.width * (2/3); i < game.world.width; i = i + 8) {
+		ground = platforms.create(i, game.world.height - 96, 'tile');
 		ground.body.immovable = true;
 	}
 
