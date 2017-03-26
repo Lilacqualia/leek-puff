@@ -16,8 +16,7 @@ export default class Leek extends Phaser.Sprite {
 
 		// Stage
 		this.state = {
-			inflated: false,
-			deflateBoosting: false
+			inflated: false
 		};
 
 		// Currently active commands
@@ -38,9 +37,6 @@ export default class Leek extends Phaser.Sprite {
 		// Is inflation is on cooldown?
 		this.inflationOnCooldown = false;
 		
-		this.deflateBoostTime = 150;
-		this.deflateBoostAccel = -2000;
-
 		this.timer = this.game.time.create(false);
 		this.timer.start();
 
@@ -107,9 +103,7 @@ export default class Leek extends Phaser.Sprite {
 
 		this.body.acceleration.y =
 			(this.state.inflated * this.commands.up * -this.inflateAccel) +
-			(this.state.inflated * this.commands.down * this.inflateAccel) +
-			(this.state.deflateBoosting * this.deflateBoostAccel);
-
+			(this.state.inflated * this.commands.down * this.inflateAccel);
 	}
 
 	_inflate() {
@@ -124,6 +118,8 @@ export default class Leek extends Phaser.Sprite {
 		this.accelX = 150;
 		if (!this.body.onFloor) {
 			this.y += 16;
+		} else {
+			this.body.velocity.y -= 25;
 		}
 
 		this._updateAcceleration();
@@ -166,15 +162,9 @@ export default class Leek extends Phaser.Sprite {
 		this.accelX = 750;
 
 		if (!this.commands.down) {
-			this.state.deflateBoosting = true;
-			this.timer.add(this.deflateBoostTime, this._deflateBoostExpire, this);
+			this.body.velocity.y -= 250;
 		}
 
-		this._updateAcceleration();
-	}
-
-	_deflateBoostExpire() {
-		this.state.deflateBoosting = false;
 		this._updateAcceleration();
 	}
 }
