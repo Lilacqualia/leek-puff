@@ -1,7 +1,7 @@
 import Constants from './Constants';
 
 export default class Leek extends Phaser.Sprite {
-	constructor(game, x, y, input) {
+	constructor(game, x, y) {
 		super(game, x, y, 'leek');
 		this.game.physics.arcade.enable(this);
 
@@ -25,8 +25,12 @@ export default class Leek extends Phaser.Sprite {
 		this.commands = {
 			left: false,
 			right: false,
+			up: false,
+			down: false,
 			inflate: false
 		};
+
+		this.facing = 1;
 
 		// Maximum inflation time in ms
 		this.maxInflationTime = 1000;
@@ -53,7 +57,7 @@ export default class Leek extends Phaser.Sprite {
 		this.animations.add('inflated', [1], true);
 
 		// Register input listener
-		input.dispatcher.add(this._command.bind(this));
+		this.game.commandDispatcher.add(this._handleCommandEvent.bind(this));
 	}
 
 	_updateState() {
@@ -64,45 +68,36 @@ export default class Leek extends Phaser.Sprite {
 		}
 	}
 
-	_command(event) {
-		// Get +, -, or 0 x from left/right
-		var direction = 0;
-		if (typeof event.direction === 'string') {
-			direction = Constants.direction[event.direction];
-		}
+	_handleCommandEvent(event) {
+		this.commands[event.command] = event.active;
 
 		switch(event.command) {
-			case 'startMove':
-				this.commands[event.direction] = true;
-				// Don't change facing if holding both horizontal keys
-				if (!(this.commands.left && this.commands.right)) {
-					this.scale.setTo(direction, 1);
-				}
+			case 'left':
+			case 'right':
+				this._updateFacing();
 				break;
-			case 'stopMove':
-				this.commands[event.direction] = false;
-				// Change facing if still holding the other horizontal key
-				if (this.commands.right) {
-					this.scale.setTo(1, 1);
-				} else if (this.commands.left) {
-					this.scale.setTo(-1, 1);
-				}
-				break;
-			case 'startInflate':
-				this.commands.inflate = true;
-				if (!this.state.inflated && !this.inflationOnCooldown) {
+			case 'inflate':
+				if (event.active === true && !this.state.inflated && !this.inflationOnCooldown) {
 					this._inflate();
 				}
-				break;
-			case 'stopInflate':
-				this.commands.inflate = false;
-				if (this.state.inflated) {
+				if (event.active === false && this.state.inflated) {
 					this._deflate();
 				}
 				break;
 		}
 
 		this._updateAcceleration();
+	}
+
+	_updateFacing() {
+		// Don't change facing if holding both horizontal keys
+		if (this.commands.left && this.commands.right) {
+			return;
+		} else if (this.commands.left && !this.commands.right) {
+			this.scale.setTo(-1, 1);
+		} else if (!this.commands.left && this.commands.right) {
+			this.scale.setTo(1, 1);
+		}
 	}
 
 	// Recalculate acceleration based on current input and state
