@@ -7,16 +7,18 @@ export default class Leek extends Phaser.Sprite {
 
 		this.body.collideWorldBounds = true;
 
+		this.body.onCollide = new Phaser.Signal();
+		this.body.onCollide.add(this._handleCollision, this);
+
 		this.anchor.x = .5;
 		this.anchor.y = .625;
-
-		this.accelX = 1500;
 
 		this.inflateAccel = 100;
 
 		// Stage
 		this.state = {
-			inflated: false
+			inflated: false,
+			inflationRecovery: false
 		};
 
 		// Currently active commands
@@ -32,11 +34,7 @@ export default class Leek extends Phaser.Sprite {
 
 		// Maximum inflation time in ms
 		this.maxInflationTime = 2000;
-		// Inflation time cooldown in ms
-		this.inflationCooldown = 750;
-		// Is inflation is on cooldown?
-		this.inflationOnCooldown = false;
-		
+				
 		this.timer = this.game.time.create(false);
 		this.timer.start();
 
@@ -72,7 +70,7 @@ export default class Leek extends Phaser.Sprite {
 				this._updateFacing();
 				break;
 			case 'inflate':
-				if (event.active === true && !this.state.inflated && !this.inflationOnCooldown) {
+				if (event.active === true && !this.state.inflated && !this.state.inflationRecovery) {
 					this._inflate();
 				}
 				if (event.active === false && this.state.inflated) {
@@ -82,6 +80,12 @@ export default class Leek extends Phaser.Sprite {
 		}
 
 		this._updateAcceleration();
+	}
+
+	_handleCollision() {
+		if (this.body.onFloor && !this.state.inflated) {
+			this._inflateRecharge();
+		}
 	}
 
 	_updateFacing() {
@@ -137,7 +141,7 @@ export default class Leek extends Phaser.Sprite {
 	}
 
 	_inflateRecharge() {
-		this.inflationOnCooldown = false;
+		this.state.inflationRecovery = false;
 		// Inflate immediately after recharge if key is held down
 		if (this.commands.inflate) {
 			this._inflate();
@@ -148,10 +152,9 @@ export default class Leek extends Phaser.Sprite {
 		this.state.inflated = false;
 		this._updateAnimation();
 
-		this.inflationOnCooldown = true;
+		this.state.inflationRecovery = true;
 
 		this.timer.remove(this.inflateExpireTimer);
-		this.timer.add(this.inflationCooldown, this._inflateRecharge, this);
 
 		this.body.gravity.y = this.defaultGravity;
 		this.body.drag = {x: 1500, y: 200};
