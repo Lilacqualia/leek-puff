@@ -3,7 +3,8 @@ export default class Leek extends Phaser.Sprite {
 		super(game, x, y, 'leek');
 		this.game.physics.arcade.enable(this);
 
-		this.body.gravity.y = 1000;
+		this.defaultGravity = 1000;
+
 		this.body.collideWorldBounds = true;
 
 		this.anchor.x = .5;
@@ -104,9 +105,7 @@ export default class Leek extends Phaser.Sprite {
 			(this.commands.left * -this.accelX) +
 			(this.commands.right * this.accelX);
 
-		this.body.acceleration.y = this.state.inflated * -this.body.gravity.y
-
-		this.body.acceleration.y +=
+		this.body.acceleration.y =
 			(this.state.inflated * this.commands.up * -this.inflateAccel) +
 			(this.state.inflated * this.commands.down * this.inflateAccel) +
 			(this.state.deflateBoosting * this.deflateBoostAccel);
@@ -117,11 +116,12 @@ export default class Leek extends Phaser.Sprite {
 		this.state.inflated = true;
 		this._updateAnimation();
 
-		this.body.drag = {x: 50, y: 10};
-		this.body.maxVelocity = {x: 75, y: 100};
+		this.body.gravity.y = 0;
+		this.body.drag = {x: 100, y: 100};
+		this.body.maxVelocity = {x: 100, y: 100};
 		this.body.setSize(16, 33, 24, 15);
 		this.body.bounce.set(0.5, 0.5);
-		this.accelX = 100;
+		this.accelX = 150;
 		if (!this.body.onFloor) {
 			this.y += 16;
 		}
@@ -157,12 +157,13 @@ export default class Leek extends Phaser.Sprite {
 		this.timer.remove(this.inflateExpireTimer);
 		this.timer.add(this.inflationCooldown, this._inflateRecharge, this);
 
+		this.body.gravity.y = this.defaultGravity;
 		this.body.drag = {x: 1500, y: 200};
 		this.body.maxVelocity = {x: 150, y: 500};
 		this.body.setSize(8, 16, 28, 40);
 		this.y -= 16;
 		this.body.bounce.set(0, 0);
-		this.accelX = 1500;
+		this.accelX = 750;
 
 		if (!this.commands.down) {
 			this.state.deflateBoosting = true;
