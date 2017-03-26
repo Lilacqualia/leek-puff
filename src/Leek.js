@@ -1,5 +1,3 @@
-import Constants from './Constants';
-
 export default class Leek extends Phaser.Sprite {
 	constructor(game, x, y) {
 		super(game, x, y, 'leek');
@@ -13,7 +11,7 @@ export default class Leek extends Phaser.Sprite {
 
 		this.accelX = 1500;
 
-		this.inflateAccel = -this.body.gravity.y - 100;
+		this.inflateAccel = 100;
 
 		// Stage
 		this.state = {
@@ -33,7 +31,7 @@ export default class Leek extends Phaser.Sprite {
 		this.facing = 1;
 
 		// Maximum inflation time in ms
-		this.maxInflationTime = 1000;
+		this.maxInflationTime = 2000;
 		// Inflation time cooldown in ms
 		this.inflationCooldown = 750;
 		// Is inflation is on cooldown?
@@ -60,7 +58,7 @@ export default class Leek extends Phaser.Sprite {
 		this.game.commandDispatcher.add(this._handleCommandEvent.bind(this));
 	}
 
-	_updateState() {
+	_updateAnimation() {
 		if (this.state.inflated) {
 			this.animations.play('inflated');
 		} else {
@@ -106,19 +104,27 @@ export default class Leek extends Phaser.Sprite {
 			(this.commands.left * -this.accelX) +
 			(this.commands.right * this.accelX);
 
-		this.body.acceleration.y = 
-			(this.state.inflated * this.inflateAccel) +
+		this.body.acceleration.y = this.state.inflated * -this.body.gravity.y
+
+		this.body.acceleration.y +=
+			(this.state.inflated * this.commands.up * -this.inflateAccel) +
+			(this.state.inflated * this.commands.down * this.inflateAccel) +
 			(this.state.deflateBoosting * this.deflateBoostAccel);
 
 	}
 
 	_inflate() {
 		this.state.inflated = true;
-		this._updateState();
+		this._updateAnimation();
 
 		this.body.drag = {x: 50, y: 10};
 		this.body.maxVelocity = {x: 75, y: 100};
-		this.accelX = 500;
+		this.body.setSize(16, 33, 24, 15);
+		this.body.bounce.set(0.5, 0.5);
+		this.accelX = 100;
+		if (!this.body.onFloor) {
+			this.y += 16;
+		}
 
 		this._updateAcceleration();
 
@@ -144,7 +150,7 @@ export default class Leek extends Phaser.Sprite {
 
 	_deflate() {
 		this.state.inflated = false;
-		this._updateState();
+		this._updateAnimation();
 
 		this.inflationOnCooldown = true;
 
@@ -154,10 +160,14 @@ export default class Leek extends Phaser.Sprite {
 		this.body.drag = {x: 1500, y: 200};
 		this.body.maxVelocity = {x: 150, y: 500};
 		this.body.setSize(8, 16, 28, 40);
+		this.y -= 16;
+		this.body.bounce.set(0, 0);
 		this.accelX = 1500;
 
-		this.state.deflateBoosting = true;
-		this.timer.add(this.deflateBoostTime, this._deflateBoostExpire, this);
+		if (!this.commands.down) {
+			this.state.deflateBoosting = true;
+			this.timer.add(this.deflateBoostTime, this._deflateBoostExpire, this);
+		}
 
 		this._updateAcceleration();
 	}

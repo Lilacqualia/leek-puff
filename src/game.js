@@ -33,6 +33,10 @@ function create() {
 		ground = platforms.create(i, game.world.height - 8, 'tile');
 		ground.body.immovable = true;
 	}
+	for (i = game.world.width * (3/8); i < game.world.width * (5/8); i = i + 8) {
+		ground = platforms.create(i, game.world.height - 40, 'tile');
+		ground.body.immovable = true;
+	}
 	for (i = 0; i < game.world.width/3; i = i + 8) {
 		ground = platforms.create(i, game.world.height - 64, 'tile');
 		ground.body.immovable = true;
