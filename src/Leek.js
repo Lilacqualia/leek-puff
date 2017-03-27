@@ -15,10 +15,9 @@ export default class Leek extends Phaser.Sprite {
 
 		this.inflateAccel = 100;
 
-		// Stage
 		this.state = {
 			inflated: false,
-			inflationRecovery: false
+			inAir: true
 		};
 
 		// Currently active commands
@@ -34,7 +33,7 @@ export default class Leek extends Phaser.Sprite {
 
 		// Maximum inflation time in ms
 		this.maxInflationTime = 2000;
-				
+
 		this.timer = this.game.time.create(false);
 		this.timer.start();
 
@@ -42,8 +41,6 @@ export default class Leek extends Phaser.Sprite {
 
 		// Initalize in normal state
 		this._deflate();
-
-
 
 		// Add animations
 		this.animations.add('normal', [0], true);
@@ -70,7 +67,7 @@ export default class Leek extends Phaser.Sprite {
 				this._updateFacing();
 				break;
 			case 'inflate':
-				if (event.active === true && !this.state.inflated && !this.state.inflationRecovery) {
+				if (event.active === true && !this.state.inflated && !this.state.inAir) {
 					this._inflate();
 				}
 				if (event.active === false && this.state.inflated) {
@@ -84,7 +81,7 @@ export default class Leek extends Phaser.Sprite {
 
 	_handleCollision() {
 		if (this.body.onFloor && !this.state.inflated) {
-			this._inflateRecharge();
+			this.state.inAir = false;
 		}
 	}
 
@@ -112,6 +109,7 @@ export default class Leek extends Phaser.Sprite {
 
 	_inflate() {
 		this.state.inflated = true;
+		this.state.inAir = true;
 		this._updateAnimation();
 
 		this.body.gravity.y = 0;
@@ -129,30 +127,14 @@ export default class Leek extends Phaser.Sprite {
 		this._updateAcceleration();
 
 		this.inflateExpireTimer = this.timer.add(
-			this.maxInflationTime, this._inflateExpire, this
+			this.maxInflationTime, this._deflate, this
 		);
 
-	}
-
-	_inflateExpire() {
-		if (this.state.inflated) {
-			this._deflate();
-		}
-	}
-
-	_inflateRecharge() {
-		this.state.inflationRecovery = false;
-		// Inflate immediately after recharge if key is held down
-		if (this.commands.inflate) {
-			this._inflate();
-		}
 	}
 
 	_deflate() {
 		this.state.inflated = false;
 		this._updateAnimation();
-
-		this.state.inflationRecovery = true;
 
 		this.timer.remove(this.inflateExpireTimer);
 
