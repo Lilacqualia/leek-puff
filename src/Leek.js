@@ -17,7 +17,7 @@ export default class Leek extends Phaser.Sprite {
 
 		this.state = {
 			inflated: false,
-			inAir: true
+			inflationRecovery: true
 		};
 
 		// Currently active commands
@@ -67,7 +67,7 @@ export default class Leek extends Phaser.Sprite {
 				this._updateFacing();
 				break;
 			case 'inflate':
-				if (event.active === true && !this.state.inflated && !this.state.inAir) {
+				if (event.active === true && !this.state.inflated && !this.state.inflationRecovery) {
 					this._inflate();
 				}
 				if (event.active === false && this.state.inflated) {
@@ -81,7 +81,7 @@ export default class Leek extends Phaser.Sprite {
 
 	_handleCollision() {
 		if (this.body.onFloor && !this.state.inflated) {
-			this.state.inAir = false;
+			this.state.inflationRecovery = false;
 		}
 	}
 
@@ -109,7 +109,7 @@ export default class Leek extends Phaser.Sprite {
 
 	_inflate() {
 		this.state.inflated = true;
-		this.state.inAir = true;
+		this.state.inflationRecovery = true;
 		this._updateAnimation();
 
 		this.body.gravity.y = 0;
