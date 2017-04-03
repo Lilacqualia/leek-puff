@@ -64,6 +64,14 @@ export default class Leek extends Phaser.Sprite {
 			set inflate(value) {
 				this._inflate = value;
 				inflationUpdate();
+			},
+			_deflate: true,
+			get deflate() {
+				return this._deflate;
+			},
+			set deflate(value) {
+				this._deflate = value;
+				inflationUpdate();
 			}
 		};
 
@@ -94,10 +102,15 @@ export default class Leek extends Phaser.Sprite {
 	_createCommandHandlers(target) {
 		var handlers = {};
 		handlers[Constants.commands.INFLATE] = function() {
-			target._activeCommands.inflate = true;
+			if (!target.state.inflated) {
+				target._activeCommands.inflate = true;
+			}
 		};
 		handlers[Constants.commands.DEFLATE] = function() {
-			target._deflate();
+			target._activeCommands.inflate = false;
+			if (target.state.inflated) {
+				target._activeCommands.deflate = true;
+			}
 		};
 		handlers[Constants.commands.MOVE_LEFT_START] = function() {
 			target._activeCommands.left = true;
@@ -131,6 +144,9 @@ export default class Leek extends Phaser.Sprite {
 	_handleCollision() {
 		if (this.body.onFloor && !this.state.inflated) {
 			this.state.inflationRecovery = false;
+			if (this._activeCommands.inflate) {
+				this._inflate();
+			}
 		}
 	}
 
@@ -141,8 +157,11 @@ export default class Leek extends Phaser.Sprite {
 	}
 
 	_updateFromInflateCommand() {
-		if (!this.state.inflated && this._activeCommands.inflate) {
+		if (!this.state.inflated && this._activeCommands.inflate && !this.state.inflationRecovery) {
 			this._inflate();
+		}
+		if (this.state.inflated && this._activeCommands.deflate) {
+			this._deflate();
 		}
 		this._updateAnimation();
 		this._updateAcceleration();
@@ -181,7 +200,7 @@ export default class Leek extends Phaser.Sprite {
 	_inflate() {
 		this.state.inflated = true;
 		this.state.inflationRecovery = true;
-		this._activeCommands.inflate = false;
+		this._activeCommands.deflate = false;
 
 		this.body.gravity.y = 0;
 		this.body.drag = {x: 100, y: 100};
