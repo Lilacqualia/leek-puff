@@ -1,7 +1,7 @@
 import 'babel-polyfill';
 
 import Leek from './Leek';
-import CommandDispatcher from './CommandDispatcher';
+import InputController from './InputController';
 
 const game = new Phaser.Game(480, 270, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 
@@ -46,8 +46,8 @@ function create() {
 		ground.body.immovable = true;
 	}
 
-	game.commandDispatcher = new CommandDispatcher(game);
 	player = game.add.existing(new Leek(game, 0, 0));
+	game.playerInputController = new InputController(game, player);
 
 
 }
