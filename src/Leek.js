@@ -24,7 +24,14 @@ export default class Leek extends Phaser.Sprite {
 
 		var directionalUpdate = this._updateFromDirectionalCommand.bind(this);
 		var inflationUpdate = this._updateFromInflateCommand.bind(this);
-		this._activeCommands = new Proxy({}, {
+		this._activeCommands = new Proxy({
+			'left': false,
+			'right': false,
+			'up': false,
+			'down': false,
+			'inflate': false,
+			'deflate': false
+		}, {
 			get: function (target, property) {
 				return target[property];
 			},
@@ -45,6 +52,9 @@ export default class Leek extends Phaser.Sprite {
 				return true;
 			}
 		});
+
+		this.status = {};
+		this._state = {};
 
 		// Rework everything below for consistent state/constant management
 		this.defaultGravity = 1000;
