@@ -24,56 +24,27 @@ export default class Leek extends Phaser.Sprite {
 
 		var directionalUpdate = this._updateFromDirectionalCommand.bind(this);
 		var inflationUpdate = this._updateFromInflateCommand.bind(this);
-		this._activeCommands = {
-			_left: false,
-			get left() {
-				return this._left;
+		this._activeCommands = new Proxy({}, {
+			get: function (target, property) {
+				return target[property];
 			},
-			set left(value) {
-				this._left = value;
-				directionalUpdate();
-			},
-			_right: false,
-			get right() {
-				return this._right;
-			},
-			set right(value) {
-				this._right = value;
-				directionalUpdate();
-			},
-			_up: false,
-			get up() {
-				return this._up;
-			},
-			set up(value) {
-				this._up = value;
-				directionalUpdate();
-			},
-			_down: false,
-			get down() {
-				return this._down;
-			},
-			set down(value) {
-				this._down = value;
-				directionalUpdate();
-			},
-			_inflate: false,
-			get inflate() {
-				return this._inflate;
-			},
-			set inflate(value) {
-				this._inflate = value;
-				inflationUpdate();
-			},
-			_deflate: true,
-			get deflate() {
-				return this._deflate;
-			},
-			set deflate(value) {
-				this._deflate = value;
-				inflationUpdate();
+			set: function (target, property, value) {
+				target[property] = value;
+				switch(property) {
+					case 'left':
+					case 'right':
+					case 'up':
+					case 'down':
+						directionalUpdate();
+						break;
+					case 'inflate':
+					case 'deflate':
+						inflationUpdate();
+						break;
+				}
+				return true;
 			}
-		};
+		});
 
 		// Rework everything below for consistent state/constant management
 		this.defaultGravity = 1000;
